@@ -1,5 +1,8 @@
 package com.EchelonSDK;
 
+import com.EchelonSDK.Responses.TwitchResponses;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
@@ -15,7 +18,7 @@ public class EchelonTwitchController {
 
     @FunctionalInterface
     interface onGenerateAuthCode {
-        void run(Responses.TwitchResponses.AuthCode code);
+        void run(TwitchResponses.AuthCode code);
     }
 
     @FunctionalInterface
@@ -23,8 +26,15 @@ public class EchelonTwitchController {
         void run(LoginAuthData data);
     }
 
+    @FunctionalInterface
+    public interface onAuthComplete{
 
-    static Responses.TwitchResponses.ClientToken clientToken;
+        void run(TwitchResponses.ClientToken tokenData, boolean fromStoredCredentials);
+    };
+
+
+    public static ArrayList<onAuthComplete> onTwitchAuthCompleted = new ArrayList<>();
+    static TwitchResponses.ClientToken clientToken;
 
     private static void GenerateAuthCode(onGenerateAuthCode code)
     {
@@ -35,7 +45,7 @@ public class EchelonTwitchController {
         formData.put("devToken",Echelon.token);
         formData.put("requestorId",Echelon.deviceID);
 
-        CompletableFuture<Responses.TwitchResponses.AuthCode> red = Utils.ApiRequest(Echelon.getUrl(),formData, Responses.TwitchResponses.AuthCode.class);
+        CompletableFuture<TwitchResponses.AuthCode> red = Utils.apiRequest(Echelon.getUrl(),formData, TwitchResponses.AuthCode.class);
         red.thenAccept(code::run).join();
 
     }
@@ -70,7 +80,7 @@ public class EchelonTwitchController {
     {
         if (!Echelon.initialised) return;
 
-        Responses.TwitchResponses.ClientToken tokenData = getClientTokenData();
+        TwitchResponses.ClientToken tokenData = getClientTokenData();
 
         if (tokenData == null)
         {
@@ -85,19 +95,39 @@ public class EchelonTwitchController {
     }
 
 
-    public static void TriggerAuthCompleted(Responses.TwitchResponses.ClientToken tokenData,boolean fromStoredCredentials)
+    public static void TriggerAuthCompleted(TwitchResponses.ClientToken tokenData,boolean fromStoredCredentials)
     {
+        for (onAuthComplete complete: onTwitchAuthCompleted)
+        {
+            complete.run(tokenData,fromStoredCredentials);
+        }
+        //also override our socket connection device id in server for our twitch id
         EchelonWebSocketClient.sendOverridingInitMessage(tokenData.uid);
     }
 
-    public static void setClientTokenData(Responses.TwitchResponses.ClientToken token,boolean fromStoredCredentials)
+    public static void setClientTokenData(TwitchResponses.ClientToken token,boolean fromStoredCredentials)
     {
-        clientToken = token;
-
-        TriggerAuthCompleted(clientToken, fromStoredCredentials);
+       setClientTokenData(token,fromStoredCredentials,true);
     }
 
-    public static Responses.TwitchResponses.ClientToken getClientTokenData()
+    public static void setClientTokenData(TwitchResponses.ClientToken token,boolean fromStoredCredentials,boolean triggerAuthEvents)
+    {
+        //TODO TriggerAuthEvents is only false if Credentials are saved and do not want to call Auth Events as they are not needed
+        clientToken = token;
+        if (triggerAuthEvents) TriggerAuthCompleted(clientToken, fromStoredCredentials);
+    }
+
+    public static boolean clearClientTokenData()
+    {
+        if(!Echelon.initialised)return false;
+
+        clientToken = null;
+        EchelonWebSocketClient.sendOverridingInitMessage("");
+        //TODO on Credentials Cleared;
+        return true;
+    }
+
+    public static TwitchResponses.ClientToken getClientTokenData()
     {
         return clientToken;
     }

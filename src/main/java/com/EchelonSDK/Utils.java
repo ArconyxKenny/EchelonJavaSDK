@@ -4,11 +4,13 @@ import com.google.gson.Gson;
 
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -35,9 +37,10 @@ public class Utils {
 
     public static String encodeURL(String string)
     {
-        string = string.replace("{", URLEncoder.encode("{"));
-        string = string.replace("}",URLEncoder.encode("}"));
-        string = string.replace("\"",URLEncoder.encode(String.valueOf('"')));
+        //string = string.replace("{", URLEncoder.encode("{", StandardCharsets.UTF_8));
+        //string = string.replace("}",URLEncoder.encode("}", StandardCharsets.UTF_8));
+        //string = string.replace("\"",URLEncoder.encode(String.valueOf('"'), StandardCharsets.UTF_8));
+        string = URLEncoder.encode(string, StandardCharsets.UTF_8);
         return string;
     }
 
@@ -49,9 +52,7 @@ public class Utils {
     }
 
 
-
-
-    public static <T extends  APIResponse> CompletableFuture<T> ApiRequest(String apiUrl, HashMap<String,Object> formData,Class<T> tClass)
+    public static <T extends  APIResponse> CompletableFuture<T> apiRequest(String apiUrl, HashMap<String,Object> formData, onApiRequestComplete<T> onComplete, Class<T> tClass)
     {
 
         return CompletableFuture.supplyAsync(() ->{
@@ -67,7 +68,7 @@ public class Utils {
             HttpRequest HttpRequest = newBuilder(uri).build();
             try{
                 HttpResponse<String> httpResponse =  client.send(HttpRequest, HttpResponse.BodyHandlers.ofString());
-                Echelon.logger.info("Response Body " + httpResponse.body());
+
                 response = new Gson().fromJson(
                         httpResponse.body(),tClass
                 );
@@ -75,8 +76,15 @@ public class Utils {
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
+
+            if (onComplete != null) onComplete.run();
             return response;
         });
+    }
+
+    public static <T extends  APIResponse> CompletableFuture<T> apiRequest(String apiUrl, HashMap<String,Object> formData, Class<T> tClass)
+    {
+        return apiRequest(apiUrl,formData,null,tClass);
     }
 
 

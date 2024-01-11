@@ -1,8 +1,8 @@
 package com.EchelonSDK;
 
+import com.EchelonSDK.Responses.Responses;
+import com.EchelonSDK.Responses.TwitchResponses;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import javax.websocket.*;
 import java.io.IOException;
@@ -10,9 +10,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.concurrent.Future;
 
 import static com.EchelonSDK.Echelon.*;
 
@@ -31,6 +29,9 @@ public class EchelonWebSocketClient extends Endpoint {
 
     static String currentSocketID;
     static Session session;
+
+    public static boolean connected;
+    public static boolean connecting;
     public EchelonWebSocketClient(String domain)
     {
         this.domain = domain;
@@ -43,14 +44,22 @@ public class EchelonWebSocketClient extends Endpoint {
 
     public void init(onConnectSocket onConnectSocket)
     {
+        if (connecting || connected)
+        {
+            logger.warn("Socket is already connecting or reconnecting, Ignoring Init call...");
+            return;
+        }
+        connecting = true;
         URI uri = URI.create("wss://" + getDomain() + "/");
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-        container.setDefaultMaxSessionIdleTimeout(60000);
+        container.setDefaultMaxSessionIdleTimeout(0);
         container.setAsyncSendTimeout(10000000);
         try{
             session = container.connectToServer(this, ClientEndpointConfig.Builder.create().build(),uri);
             sendSocketInitMessage();
             onConnectSocket.run();
+            connecting = false;
+            connected = true;
         } catch (DeploymentException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -62,7 +71,7 @@ public class EchelonWebSocketClient extends Endpoint {
     public void sendSocketInitMessage()
     {
         if (healthCheck()){
-            Responses.TwitchResponses.ClientToken token = EchelonTwitchController.getClientTokenData();
+            TwitchResponses.ClientToken token = EchelonTwitchController.getClientTokenData();
             currentSocketID = token == null ? deviceID: token.uid;
             HashMap<String,Object> init = new HashMap<>();
             init.put("type","core");
