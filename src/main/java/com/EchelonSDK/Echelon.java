@@ -5,6 +5,7 @@ import com.EchelonSDK.Responses.Responses;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import jdk.jshell.execution.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -86,7 +87,10 @@ public class Echelon {
 
     }
 
+    public interface onRedeemGiveAwayPoints{
 
+        void run(Responses.GiveWayPoints points);
+    }
 
 
     public ArrayList<onAuthComplete> onAuthCompletedEvents = new ArrayList<>();
@@ -248,7 +252,7 @@ public class Echelon {
                     }
                 }
             }
-        });
+        }).join();
 
         return true;
         });
@@ -309,6 +313,24 @@ public class Echelon {
             return resp.join();
         });
     }
+
+
+    public CompletableFuture<Responses.GiveWayPoints> redeemGiveAwayPoints(String redeemerId,String rewardUID,onRedeemGiveAwayPoints onComplete){
+        return CompletableFuture.supplyAsync(()->{
+            if (!initialised)return null;
+            HashMap<String,Object> formData = formDataWithToken();
+            formData.put("type","giveaway");
+            formData.put("method","redeemPoints");
+            formData.put("redeemerId",redeemerId);
+            formData.put("rewardUID",rewardUID);
+            CompletableFuture<Responses.GiveWayPoints> resp = Utils.apiRequest(getUrl(),formData, Responses.GiveWayPoints.class);
+            resp.thenAccept(onComplete::run);
+            return resp.join();
+
+        });
+
+    }
+
     public static void getDashboardURL(onDashboardUrl onComplete,String template)
     {
         if(!initialised){

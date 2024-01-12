@@ -3,11 +3,9 @@ package com.Test;
 import com.EchelonSDK.Echelon;
 import com.EchelonSDK.EchelonTwitchController;
 import com.EchelonSDK.Responses.Responses;
-import com.EchelonSDK.Responses.TwitchResponses;
 import com.EchelonSDK.Responses.TwitchResponses.ClientToken;
 import com.google.gson.Gson;
 
-import java.awt.image.AreaAveragingScaleFilter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,7 +37,10 @@ public class TestConsoleApp {
         {
             Echelon.logger.info("NEED INPUT");
             input = scanner.nextLine();
-            switch (input) {
+            if (!input.isEmpty()){
+            String mode = input.substring(0,1);
+            String option = input.substring(1);
+            switch (mode) {
                 case "1" -> {
                     Echelon.logger.info("Creating Echelon System");
                     initialiseEchelon();
@@ -61,7 +62,13 @@ public class TestConsoleApp {
                     Echelon.logger.info("Opening Dashboard");
                     openDashboard();
                 }
+                case "6" ->{
+                    Echelon.logger.info("Adding Points");
+                    addPoints(option);
+
+                }
             }
+        }
         }
         while (!input.equals("stop"));
     }
@@ -108,10 +115,10 @@ public class TestConsoleApp {
     private void getTop10LeaderBoard()
     {
         Echelon.getStatLeaderboard("points",10,response ->{
-
+            Echelon.logger.info("Leader board player count " + response.players.length);
             for (Responses.StatLeaderboardPlayer player: response.players)
             {
-                System.out.println(player);
+                System.out.println(player.value);
             }
         });
     }
@@ -166,5 +173,20 @@ public class TestConsoleApp {
         Echelon.logger.info("Player "+playerUID+" claimed reward "+rewardId+" with data "+value);
     }
 
+
+
+    private void addPoints(String points)
+    {
+        float value = Float.parseFloat(points);
+        echelon.addPlayerStat(playerData.uid,"points",value,(add)->{
+
+            if (add.success){
+                Echelon.logger.info("Added Points to local player " + value);
+            }else
+            {
+                Echelon.logger.error("Not sure what happened but it didn't work");
+            }
+        });
+    }
 
 }

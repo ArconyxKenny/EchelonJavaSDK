@@ -17,7 +17,8 @@ public class Responses {
 
 
 
-    
+
+
 
     public static class InteractiveControl
     {
@@ -31,6 +32,14 @@ public class Responses {
 
     }
 
+
+    public static class GiveWayPoints extends Utils.APIResponse
+    {
+        public int points;
+        public String rewardID;
+        public String environment;
+        public String error;
+    }
     public static class GenerateDashboardToken extends Utils.APIResponse
     {
         public String token;
