@@ -5,6 +5,7 @@ import com.EchelonSDK.EchelonTwitchController;
 import com.EchelonSDK.Responses.Responses;
 import com.EchelonSDK.Responses.TwitchResponses.ClientToken;
 import com.google.gson.Gson;
+import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
 import java.net.URI;
@@ -24,7 +25,7 @@ public class TestConsoleApp {
     TestConsoleApp()
     {
         startInput();
-
+        Echelon.logger.atLevel(Level.INFO);
 
     }
 
@@ -38,8 +39,8 @@ public class TestConsoleApp {
             Echelon.logger.info("NEED INPUT");
             input = scanner.nextLine();
             if (!input.isEmpty()){
-            String mode = input.substring(0,1);
-            String option = input.substring(1);
+            String mode = input.split(" ")[0];
+            String option = input.split(" ")[1];
             switch (mode) {
                 case "1" -> {
                     Echelon.logger.info("Creating Echelon System");
@@ -66,6 +67,16 @@ public class TestConsoleApp {
                     Echelon.logger.info("Adding Points");
                     addPoints(option);
 
+                }
+                case "7" ->
+                {
+                    Echelon.logger.info("Getting Player Stat");
+                    getPlayerStat();
+                }
+                case "8" ->
+                {
+                    Echelon.logger.info("Getting nearby leader board players");
+                    getNearByPlayerStats();
                 }
             }
         }
@@ -185,6 +196,25 @@ public class TestConsoleApp {
             }else
             {
                 Echelon.logger.error("Not sure what happened but it didn't work");
+            }
+        }).join();
+    }
+
+    private void getPlayerStat()
+    {
+        echelon.getPlayerStat(playerData.uid,"points",(points)->{
+            System.out.println("Player Points: " + points.value);
+        });
+    }
+
+
+    private void getNearByPlayerStats()
+    {
+        echelon.getNearByStatLeaderboard(playerData.uid,"points",5,(nearPoints)->{
+            System.out.println("Near By Players");
+
+            for (Responses.StatLeaderboardPlayer player: nearPoints.players){
+                System.out.println("Player " + player.uid + "Score: " + player.value);
             }
         });
     }

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.EchelonJavaSDK'
-version = '1.0-SNAPSHOT'
+version = '0.1a'
 
 repositories {
     mavenCentral()

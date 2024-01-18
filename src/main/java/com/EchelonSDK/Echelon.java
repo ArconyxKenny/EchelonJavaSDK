@@ -480,14 +480,32 @@ public class Echelon {
     }
 
 
+    public void getNearByStatLeaderboard(String playerUID, String statName,int amount,onStatLeaderboard onComplete)
+    {
+        HashMap<String,Object> formData = formDataWithToken();
+        formData.put("type","player");
+        formData.put("method","getStatLeaderboardNearBy");
+        formData.put("playerUID",playerUID);
+        formData.put("stat",statName);
+        formData.put("amount",amount);
+        formData.put("environment",currentEnvironment.index);
+        CompletableFuture<Responses.StatLeaderboard> leaderboard = Utils.apiRequest(getUrl(),formData, Responses.StatLeaderboard.class);
+        leaderboard.thenAccept(onComplete::run).join();
+    }
 
 
-
-
-
-
-
-
+    public void getPlayerStat(String playerUID,String statName,onPlayerStat onComplete)
+    {
+        HashMap<String,Object> formData = formDataWithToken();
+        formData.put("type","player");
+        formData.put("method","getPlayerStat");
+        formData.put("playerUID",playerUID);
+        formData.put("stat",statName);
+        formData.put("environment",currentEnvironment.index);
+        CompletableFuture<Responses.PlayerStat> response = Utils.apiRequest(getUrl(),formData, Responses.PlayerStat.class);
+        response.thenAccept(onComplete::run);
+        response.join();
+    }
 
 
 
