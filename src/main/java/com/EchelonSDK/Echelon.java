@@ -188,7 +188,7 @@ public class Echelon {
     }
 
 
-    public static void getStatLeaderboard(String statName, int amount, onStatLeaderboard onStatLeaderboard)
+    public void getStatLeaderboard(String statName, int amount, onStatLeaderboard onStatLeaderboard)
     {
         HashMap<String,Object> formData = formDataWithToken();
         formData.put("type","player");
@@ -271,7 +271,7 @@ public class Echelon {
             rewardsBeingUnlocked.get(playerUID).remove(rewardId);
 
             if(onPlayerRewardClaimed != null)onPlayerRewardClaimed.run(playerUID,rewardId,rewardUID,value);
-            Echelon.logger.info("Player " + playerUID + " unlocked " + rewardId + " with rewardUID " + rewardUID);
+            Echelon.logger.info("Player " + playerUID + " unlocked reward: " + rewardId + " with rewardUID " + rewardUID + "with value "+ value);
         });
         clearReward.join();
     }

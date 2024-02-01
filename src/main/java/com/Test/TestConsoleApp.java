@@ -40,7 +40,10 @@ public class TestConsoleApp {
             input = scanner.nextLine();
             if (!input.isEmpty()){
             String mode = input.split(" ")[0];
-            String option = input.split(" ")[1];
+            String option ="";
+            if(input.split(" ").length > 1) {
+                option = input.split(" ")[1];
+            }
             switch (mode) {
                 case "1" -> {
                     Echelon.logger.info("Creating Echelon System");
@@ -125,7 +128,7 @@ public class TestConsoleApp {
 
     private void getTop10LeaderBoard()
     {
-        Echelon.getStatLeaderboard("points",10,response ->{
+        echelon.getStatLeaderboard("points",10,response ->{
             Echelon.logger.info("Leader board player count " + response.players.length);
             for (Responses.StatLeaderboardPlayer player: response.players)
             {
