@@ -1,0 +1,23 @@
+<component name="ArtifactManager">
+  <artifact name="EchelonJavaSDK.main:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/EchelonJavaSDK_main_jar</output-path>
+    <root id="root">
+      <element id="archive" name="EchelonJavaSDK.main.jar">
+        <element id="module-output" name="EchelonJavaSDK.main" />
+      </element>
+      <element id="library" level="project" name="Gradle: org.apache.httpcomponents:httpclient:4.5.14" />
+      <element id="library" level="project" name="Gradle: ch.qos.reload4j:reload4j:1.2.22" />
+      <element id="library" level="project" name="Gradle: org.apache.logging.log4j:log4j-core:2.22.1" />
+      <element id="library" level="project" name="Gradle: org.slf4j:slf4j-api:2.0.11" />
+      <element id="library" level="project" name="Gradle: org.apache.httpcomponents:httpcore:4.4.16" />
+      <element id="library" level="project" name="Gradle: org.slf4j:slf4j-reload4j:2.0.11" />
+      <element id="library" level="project" name="Gradle: org.glassfish:javax.json:1.0.1" />
+      <element id="library" level="project" name="Gradle: org.java-websocket:Java-WebSocket:1.5.5" />
+      <element id="library" level="project" name="Gradle: org.apache.logging.log4j:log4j-api:2.22.1" />
+      <element id="library" level="project" name="Gradle: com.google.code.gson:gson:2.10.1" />
+      <element id="library" level="project" name="Gradle: commons-logging:commons-logging:1.2" />
+      <element id="library" level="project" name="Gradle: commons-codec:commons-codec:1.16.0" />
+      <element id="library" level="project" name="Gradle: javax.json:javax.json-api:1.0" />
+    </root>
+  </artifact>
+</component>

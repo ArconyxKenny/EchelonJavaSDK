@@ -1,21 +1,21 @@
 package com.EchelonSDK;
 
 import com.google.gson.Gson;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static java.net.http.HttpRequest.newBuilder;
 
 public class Utils {
 
@@ -40,7 +40,11 @@ public class Utils {
         //string = string.replace("{", URLEncoder.encode("{", StandardCharsets.UTF_8));
         //string = string.replace("}",URLEncoder.encode("}", StandardCharsets.UTF_8));
         //string = string.replace("\"",URLEncoder.encode(String.valueOf('"'), StandardCharsets.UTF_8));
-        string = URLEncoder.encode(string, StandardCharsets.UTF_8);
+        try {
+            string = URLEncoder.encode(string, String.valueOf(StandardCharsets.UTF_8));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
         return string;
     }
 
@@ -64,21 +68,34 @@ public class Utils {
             String request = getJsonString(formData);
             String fullUrl = apiUrl + "?data=" + Utils.encodeURL(request);
             URI uri = URI.create(fullUrl);
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest HttpRequest = newBuilder(uri).build();
+            try(CloseableHttpClient client = HttpClients.createDefault()){
+                HttpGet htttpRequest = new HttpGet(uri);
             try{
-                HttpResponse<String> httpResponse =  client.send(HttpRequest, HttpResponse.BodyHandlers.ofString());
+                HttpResponse httpResponse =  client.execute(htttpRequest);
+                StringBuilder builder = new StringBuilder();
+                InputStream stream = httpResponse.getEntity().getContent();
+                try (Reader reader = new BufferedReader(new InputStreamReader
+                        (stream, StandardCharsets.UTF_8))) {
+                    int c;
+                    while ((c = reader.read()) != -1) {
+                        builder.append((char) c);
+                    }
+                }
+                String stringResponse = builder.toString();
 
                 response = new Gson().fromJson(
-                        httpResponse.body(),tClass
+                        stringResponse,tClass
                 );
 
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
             if (onComplete != null) onComplete.run();
             return response;
+        } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 

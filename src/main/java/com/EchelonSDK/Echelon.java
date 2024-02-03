@@ -2,13 +2,8 @@ package com.EchelonSDK;
 
 import com.EchelonSDK.EchelonTwitchController.onAuthComplete;
 import com.EchelonSDK.Responses.Responses;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import jdk.jshell.execution.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Timer;
@@ -144,8 +139,6 @@ public class Echelon {
             initialised = true;
         });
         Utils.apiVersion = version;
-
-        EchelonWebSocketClient.session.addMessageHandler(new EchelonMessageHandler());
 
     }
 
@@ -508,40 +501,5 @@ public class Echelon {
     }
 
 
-
-    public static class EchelonMessageHandler implements javax.websocket.MessageHandler.Whole<String> {
-
-    @Override
-    public void onMessage(String message) {
-        JsonElement jsonElement = JsonParser.parseString(message);
-        Echelon.logger.info("Server Message " + jsonElement);
-        JsonObject jsonMessage = jsonElement.getAsJsonObject();
-        String type = jsonMessage.get("type").getAsString();
-
-        switch (type) {
-            case "ping" -> {
-                HashMap<String, Object> pong = new HashMap<>();
-                pong.put("type", "core");
-                pong.put("method", "pong");
-                pong.put("apiVersion", 1.9);
-                String gsonData = Utils.getJsonString(pong);
-                EchelonWebSocketClient.sendMessage(gsonData);
-            }
-            case "ready" -> {
-
-            }
-            case "twitchAuthCompleted" -> {
-                JsonObject userData = jsonMessage.getAsJsonObject("userData");
-                ClientToken token = new ClientToken();
-                token.success = true;
-                token.apiVersion = userData.get("apiVersion").getAsFloat();
-                token.id = userData.get("id").toString();
-                token.uid = userData.get("uid").getAsString();
-                token.name = userData.get("name").toString();
-                token.tokenVersion = userData.get("tokenVersion").getAsFloat();
-                EchelonTwitchController.setClientTokenData(token,false);
-            }
-        }
-    }
 }
-}
+

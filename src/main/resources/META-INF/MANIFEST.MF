@@ -1,3 +1,8 @@
 Manifest-Version: 1.0
 Main-Class: com.Test.TestConsoleApp
+Class-Path: httpclient-4.5.14.jar reload4j-1.2.22.jar log4j-core-2.22.1.
+ jar slf4j-api-2.0.11.jar httpcore-4.4.16.jar slf4j-reload4j-2.0.11.jar 
+ javax.json-1.0.1.jar Java-WebSocket-1.5.5.jar log4j-api-2.22.1.jar gson
+ -2.10.1.jar commons-logging-1.2.jar commons-codec-1.16.0.jar javax.json
+ -api-1.0.jar
 

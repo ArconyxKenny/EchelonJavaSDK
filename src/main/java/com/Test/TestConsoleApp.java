@@ -45,42 +45,41 @@ public class TestConsoleApp {
                 option = input.split(" ")[1];
             }
             switch (mode) {
-                case "1" -> {
+                case "1":
                     Echelon.logger.info("Creating Echelon System");
                     initialiseEchelon();
                     initialiseEventHooks();
-                }
-                case "2" -> {
+                    break;
+
+                case "2":
                     Echelon.logger.info("Logging in");
                     echelonLogin();
-                }
-                case "3" -> {
+                    break;
+                case "3" :
                     Echelon.logger.info("Logging out");
                     echelonLogout();
-                }
-                case "4" -> {
+                    break;
+                case "4" :
                     Echelon.logger.info("Getting Top 10 Players");
                     getTop10LeaderBoard();
-                }
-                case "5" ->{
+                    break;
+                case "5" :
                     Echelon.logger.info("Opening Dashboard");
                     openDashboard();
-                }
-                case "6" ->{
+                    break;
+                case "6":
                     Echelon.logger.info("Adding Points");
                     addPoints(option);
+                    break;
 
-                }
-                case "7" ->
-                {
+                case "7":
                     Echelon.logger.info("Getting Player Stat");
                     getPlayerStat();
-                }
-                case "8" ->
-                {
+                    break;
+                case "8":
                     Echelon.logger.info("Getting nearby leader board players");
                     getNearByPlayerStats();
-                }
+                    break;
             }
         }
         }
