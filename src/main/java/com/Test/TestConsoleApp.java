@@ -5,13 +5,14 @@ import com.EchelonSDK.EchelonTwitchController;
 import com.EchelonSDK.Responses.Responses;
 import com.EchelonSDK.Responses.TwitchResponses.ClientToken;
 import com.google.gson.Gson;
-import org.apache.logging.log4j.Level;
+
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.logging.Level;
 
 public class TestConsoleApp {
 
@@ -25,7 +26,7 @@ public class TestConsoleApp {
     TestConsoleApp()
     {
         startInput();
-        Echelon.logger.atLevel(Level.INFO);
+        Echelon.logger.isEnabledForLevel(org.slf4j.event.Level.DEBUG);
 
     }
 
@@ -197,7 +198,7 @@ public class TestConsoleApp {
                 Echelon.logger.info("Added Points to local player " + value);
             }else
             {
-                Echelon.logger.error("Not sure what happened but it didn't work");
+                Echelon.logger.info("Not sure what happened but it didn't work");
             }
         }).join();
     }

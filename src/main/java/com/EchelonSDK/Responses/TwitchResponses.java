@@ -1,15 +1,13 @@
 package com.EchelonSDK.Responses;
 
-import com.EchelonSDK.Utils;
-
 public class TwitchResponses {
 
-    public static class AuthCode extends Utils.APIResponse {
+    public static class AuthCode extends APIResponse {
         public String code;
     }
 
 
-    public static class ClientToken extends Utils.APIResponse {
+    public static class ClientToken extends APIResponse {
         public String id;
         public String uid;
         public String name;

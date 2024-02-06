@@ -1,6 +1,4 @@
 package com.EchelonSDK;
-
-import com.EchelonSDK.Responses.Responses;
 import com.EchelonSDK.Responses.TwitchResponses;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -12,10 +10,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.java_websocket.client.*;
-import org.java_websocket.handshake.ServerHandshake;
 
 
+import javax.websocket.WebSocketContainer;
 import java.io.*;
 import java.net.URI;
 
@@ -23,9 +20,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 
+
 import static com.EchelonSDK.Echelon.*;
 
-public class EchelonWebSocketClient extends WebSocketClient {
+public class EchelonWebSocketClient implements WebSocketContainer {
 
 
 
@@ -88,8 +86,8 @@ public class EchelonWebSocketClient extends WebSocketClient {
 
     @Override
     public void onError(Exception ex) {
-        logger.error("Error Occurred");
-        logger.error(ex);
+        logger.warn("Error Occurred");
+        logger.warn(ex.toString());
         ex.printStackTrace();
 
     }
@@ -197,7 +195,7 @@ public class EchelonWebSocketClient extends WebSocketClient {
             HttpGet request = new HttpGet(uri);
 
             HttpResponse response =  client.execute(request);
-            Echelon.logger.info(response.getEntity().getContent());
+            Echelon.logger.warn(response.getEntity().getContent().toString());
 
             StringBuilder builder = new StringBuilder();
             InputStream stream = response.getEntity().getContent();

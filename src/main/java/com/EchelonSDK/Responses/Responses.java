@@ -1,11 +1,9 @@
 package com.EchelonSDK.Responses;
 
-import com.EchelonSDK.Utils;
-
 public class Responses {
 
 
-    public static class SdkData extends Utils.APIResponse
+    public static class SdkData extends APIResponse
     {
         public int gameId;
         public boolean bypassMode;
@@ -33,37 +31,37 @@ public class Responses {
     }
 
 
-    public static class GiveWayPoints extends Utils.APIResponse
+    public static class GiveWayPoints extends APIResponse 
     {
         public int points;
         public String rewardID;
         public String environment;
         public String error;
     }
-    public static class GenerateDashboardToken extends Utils.APIResponse
+    public static class GenerateDashboardToken extends APIResponse 
     {
         public String token;
     }
 
 
-    public static class PlayerRewards extends Utils.APIResponse
+    public static class PlayerRewards extends APIResponse 
     {
         public RewardData[] rewards;
     }
 
-    public static class PlayersRewards extends Utils.APIResponse
+    public static class PlayersRewards extends APIResponse
     {
         public PlayerWithRewards[] players;
     }
 
-    public static class PlayerWithRewards extends Utils.APIResponse
+    public static class PlayerWithRewards extends APIResponse 
     {
         public String uid;
         public RewardData[] rewards;
 
     }
 
-    public static class RewardData extends Utils.APIResponse
+    public static class RewardData extends APIResponse 
     {
         public String id;
         public String uid;
@@ -73,12 +71,12 @@ public class Responses {
     }
 
 
-    public static class StatLeaderboard extends Utils.APIResponse
+    public static class StatLeaderboard extends APIResponse 
     {
         public StatLeaderboardPlayer[] players;
     }
 
-    public static class StatLeaderboardPlayer extends Utils.APIResponse
+    public static class StatLeaderboardPlayer extends APIResponse 
     {
         public int pos;
         public String uid;
@@ -87,7 +85,7 @@ public class Responses {
     }
 
 
-    public static class PlayerStat extends Utils.APIResponse
+    public static class PlayerStat extends APIResponse 
     {
 
         public String value;

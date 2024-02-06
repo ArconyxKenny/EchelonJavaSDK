@@ -1,5 +1,6 @@
 package com.EchelonSDK;
 
+import com.EchelonSDK.Responses.APIResponse;
 import com.google.gson.Gson;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -8,6 +9,7 @@ import org.apache.http.impl.client.HttpClients;
 
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URLEncoder;
 
@@ -56,10 +58,11 @@ public class Utils {
     }
 
 
-    public static <T extends  APIResponse> CompletableFuture<T> apiRequest(String apiUrl, HashMap<String,Object> formData, onApiRequestComplete<T> onComplete, Class<T> tClass)
+    public static <T extends APIResponse> CompletableFuture<T> apiRequest(String apiUrl, HashMap<String,Object> formData, onApiRequestComplete<T> onComplete, Type typeToken)
     {
 
         return CompletableFuture.supplyAsync(() ->{
+            Echelon.logger.info(Thread.currentThread().getContextClassLoader().toString());
             T response;
             if (apiVersion != 0f)
             {
@@ -84,7 +87,7 @@ public class Utils {
                 String stringResponse = builder.toString();
 
                 response = new Gson().fromJson(
-                        stringResponse,tClass
+                        stringResponse,typeToken
                 );
 
             } catch (IOException e) {
@@ -99,9 +102,9 @@ public class Utils {
         });
     }
 
-    public static <T extends  APIResponse> CompletableFuture<T> apiRequest(String apiUrl, HashMap<String,Object> formData, Class<T> tClass)
+    public static <T extends  APIResponse> CompletableFuture<T> apiRequest(String apiUrl, HashMap<String,Object> formData, Type typeToken)
     {
-        return apiRequest(apiUrl,formData,null,tClass);
+        return apiRequest(apiUrl,formData,null,typeToken);
     }
 
 
@@ -109,13 +112,5 @@ public class Utils {
 
 
 
-    public static class APIResponse
-    {
-        public boolean success;
-
-        public float apiVersion;
-
-        public boolean devMode;
-    }
 
 }

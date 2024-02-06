@@ -1,9 +1,12 @@
 package com.EchelonSDK;
 
 import com.EchelonSDK.EchelonTwitchController.onAuthComplete;
+import com.EchelonSDK.Responses.APIResponse;
 import com.EchelonSDK.Responses.Responses;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.google.gson.reflect.TypeToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Timer;
@@ -15,7 +18,7 @@ import static com.EchelonSDK.Responses.TwitchResponses.*;
 public class Echelon {
 
 
-    public static final Logger logger = LogManager.getLogger();
+    public static final Logger logger = LoggerFactory.getLogger("Echelon");
     private enum DOMAIN
     {
         DEV("echelon-internal.novembergames.com"),
@@ -67,7 +70,7 @@ public class Echelon {
 
     @FunctionalInterface
     public interface  onMetaResponse {
-        void run(Utils.APIResponse response);
+        void run(APIResponse response);
     }
 
     @FunctionalInterface
@@ -149,7 +152,7 @@ public class Echelon {
         formData.put("type","developer");
         formData.put("method","initSDK");
         formData.put("token",token);
-        CompletableFuture<Responses.SdkData> red = Utils.apiRequest(Echelon.getUrl(),formData, Responses.SdkData.class);
+        CompletableFuture<Responses.SdkData> red = Utils.apiRequest(Echelon.getUrl(),formData, new TypeToken<Responses.SdkData>(){}.getType());
         red.thenAccept(resp->{
             enabled = !resp.bypassMode;
             gameId  = resp.gameId;
@@ -189,7 +192,7 @@ public class Echelon {
         formData.put("stat",statName);
         formData.put("amount",amount);
         formData.put("environment",currentEnvironment.index);
-        CompletableFuture<Responses.StatLeaderboard> leaderboard = Utils.apiRequest(getUrl(),formData, Responses.StatLeaderboard.class);
+        CompletableFuture<Responses.StatLeaderboard> leaderboard = Utils.apiRequest(getUrl(),formData, new TypeToken<Responses.StatLeaderboard>(){}.getType());
         leaderboard.thenAccept(onStatLeaderboard::run).join();
     }
 
@@ -255,7 +258,7 @@ public class Echelon {
 
     private void PlayerClaimedReward(String playerUID, String rewardId,String rewardUID,String value)
     {
-        CompletableFuture<Utils.APIResponse> clearReward = ClearPlayerReward(playerUID,rewardId,comp ->{
+        CompletableFuture<APIResponse> clearReward = ClearPlayerReward(playerUID,rewardId,comp ->{
 
             if(!comp.success)
             {
@@ -270,7 +273,7 @@ public class Echelon {
     }
 
 
-    public CompletableFuture<Utils.APIResponse> ClearPlayerReward(String playerUID, String rewardId, onMetaResponse onComplete)
+    public CompletableFuture<APIResponse> ClearPlayerReward(String playerUID, String rewardId, onMetaResponse onComplete)
     {
         return CompletableFuture.supplyAsync(()->{
 
@@ -282,8 +285,8 @@ public class Echelon {
             formData.put("rewardId",rewardId);
             formData.put("environment",currentEnvironment.index);
 
-            CompletableFuture<Utils.APIResponse> response = Utils.apiRequest(getUrl(),formData, Utils.APIResponse.class);
-            Utils.APIResponse res = response.join();
+            CompletableFuture<APIResponse> response = Utils.apiRequest(getUrl(),formData, new TypeToken<APIResponse>(){}.getType());
+            APIResponse res = response.join();
             onComplete.run(res);
             return  res;
         });
@@ -301,7 +304,7 @@ public class Echelon {
             formData.put("method","getRewardsForPlayers");
             formData.put("playerUIDs",playerUIDs);
             formData.put("environment",currentEnvironment.index);
-            CompletableFuture<Responses.PlayersRewards> resp = Utils.apiRequest(getUrl(),formData, Responses.PlayersRewards.class);
+            CompletableFuture<Responses.PlayersRewards> resp = Utils.apiRequest(getUrl(),formData, new TypeToken<Responses.PlayersRewards>(){}.getType());
             resp.thenAccept(onComplete::run);
             return resp.join();
         });
@@ -316,7 +319,7 @@ public class Echelon {
             formData.put("method","redeemPoints");
             formData.put("redeemerId",redeemerId);
             formData.put("rewardUID",rewardUID);
-            CompletableFuture<Responses.GiveWayPoints> resp = Utils.apiRequest(getUrl(),formData, Responses.GiveWayPoints.class);
+            CompletableFuture<Responses.GiveWayPoints> resp = Utils.apiRequest(getUrl(),formData, new TypeToken<Responses.GiveWayPoints>(){}.getType());
             resp.thenAccept(onComplete::run);
             return resp.join();
 
@@ -347,7 +350,7 @@ public class Echelon {
         formData.put("token",token);
         formData.put("playerUID",clientToken.uid);
         formData.put("environment",currentEnvironment.index);
-        CompletableFuture<Responses.GenerateDashboardToken> genToken =  Utils.apiRequest(getUrl(),formData, Responses.GenerateDashboardToken.class);
+        CompletableFuture<Responses.GenerateDashboardToken> genToken =  Utils.apiRequest(getUrl(),formData, new TypeToken<Responses.GenerateDashboardToken>(){}.getType());
         genToken.thenAccept(tokenData->{
             if(!tokenData.success)
             {
@@ -377,7 +380,7 @@ public class Echelon {
             formData.put("method","requestPlayerDashboardStatus");
             formData.put("uid", token.uid);
 
-            CompletableFuture<Utils.APIResponse> response =  Utils.apiRequest(getUrl(),formData, Utils.APIResponse.class);
+            CompletableFuture<APIResponse> response =  Utils.apiRequest(getUrl(),formData, new TypeToken<APIResponse>(){}.getType());
             response.thenAccept(resp->{
                 Echelon.logger.info("DashboardStatus Routine Request sent " + resp.toString());
                 if (isDashboardConnected != resp.success)dashboardStatusUpdated(resp.success);
@@ -414,7 +417,7 @@ public class Echelon {
         formData.put("value",value);
         formData.put("environment",currentEnvironment.index);
 
-        CompletableFuture<Responses.PlayerStat> resp = Utils.apiRequest(getUrl(),formData, Responses.PlayerStat.class);
+        CompletableFuture<Responses.PlayerStat> resp = Utils.apiRequest(getUrl(),formData, new TypeToken<Responses.PlayerStat>(){}.getType());
         resp.thenAccept(onComplete::run);
         return resp.join();
         });
@@ -422,7 +425,7 @@ public class Echelon {
 
 
 
-    public CompletableFuture<Utils.APIResponse> ResetLocalPlayerStats(String playerUID, String statName, onMetaResponse onComplete)
+    public CompletableFuture<APIResponse> ResetLocalPlayerStats(String playerUID, String statName, onMetaResponse onComplete)
     {
 
         return CompletableFuture.supplyAsync(()->{
@@ -434,7 +437,7 @@ public class Echelon {
             formData.put("playerUID",playerUID);
             formData.put("stat",statName);
             formData.put("environment",currentEnvironment.toString());
-            CompletableFuture<Utils.APIResponse> resp =  Utils.apiRequest(getUrl(),formData, Utils.APIResponse.class);
+            CompletableFuture<APIResponse> resp =  Utils.apiRequest(getUrl(),formData, new TypeToken<APIResponse>(){}.getType());
 
             resp.thenAccept(onComplete::run);
             return resp.join();
@@ -443,7 +446,7 @@ public class Echelon {
     }
 
 
-    public CompletableFuture<Utils.APIResponse> triggerMagicMoment(int id,String playerUID, onMetaResponse onComplete)
+    public CompletableFuture<APIResponse> triggerMagicMoment(int id,String playerUID, onMetaResponse onComplete)
     {
         return CompletableFuture.supplyAsync(()->{
         HashMap<String,Object> formData = formDataWithToken();
@@ -451,14 +454,14 @@ public class Echelon {
         formData.put("method","trigger");
         formData.put("id",id);
         formData.put("playerUID",playerUID);
-        CompletableFuture<Utils.APIResponse> resp = Utils.apiRequest(getUrl(),formData, Utils.APIResponse.class);
+        CompletableFuture<APIResponse> resp = Utils.apiRequest(getUrl(),formData, new TypeToken<APIResponse>(){}.getType());
         resp.thenAccept(onComplete::run);
         return resp.join();
     });
     }
 
 
-    public CompletableFuture<Utils.APIResponse> cancelMagicMoment(int id,String playerUID, onMetaResponse onComplete)
+    public CompletableFuture<APIResponse> cancelMagicMoment(int id,String playerUID, onMetaResponse onComplete)
     {
         return CompletableFuture.supplyAsync(()->{
         HashMap<String,Object> formData = formDataWithToken();
@@ -466,7 +469,7 @@ public class Echelon {
         formData.put("method","cancel");
         formData.put("id",id);
         formData.put("playerUID",playerUID);
-        CompletableFuture<Utils.APIResponse> resp = Utils.apiRequest(getUrl(),formData, Utils.APIResponse.class);
+        CompletableFuture<APIResponse> resp = Utils.apiRequest(getUrl(),formData, new TypeToken<APIResponse>(){}.getType());
         resp.thenAccept(onComplete::run);
             return resp.join();
         });
@@ -482,7 +485,7 @@ public class Echelon {
         formData.put("stat",statName);
         formData.put("amount",amount);
         formData.put("environment",currentEnvironment.index);
-        CompletableFuture<Responses.StatLeaderboard> leaderboard = Utils.apiRequest(getUrl(),formData, Responses.StatLeaderboard.class);
+        CompletableFuture<Responses.StatLeaderboard> leaderboard = Utils.apiRequest(getUrl(),formData, new TypeToken<Responses.StatLeaderboard>(){}.getType());
         leaderboard.thenAccept(onComplete::run).join();
     }
 
@@ -495,7 +498,7 @@ public class Echelon {
         formData.put("playerUID",playerUID);
         formData.put("stat",statName);
         formData.put("environment",currentEnvironment.index);
-        CompletableFuture<Responses.PlayerStat> response = Utils.apiRequest(getUrl(),formData, Responses.PlayerStat.class);
+        CompletableFuture<Responses.PlayerStat> response = Utils.apiRequest(getUrl(),formData, new TypeToken<Responses.PlayerStat>(){}.getType());
         response.thenAccept(onComplete::run);
         response.join();
     }
