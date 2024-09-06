@@ -1,9 +1,6 @@
 package com.EchelonSDK;
 import com.EchelonSDK.Responses.TwitchResponses;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.http.HttpResponse;
@@ -11,8 +8,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-
-import javax.websocket.WebSocketContainer;
+;
+import javax.websocket.*;
 import java.io.*;
 import java.net.URI;
 
@@ -23,73 +20,45 @@ import java.util.HashMap;
 
 import static com.EchelonSDK.Echelon.*;
 
-public class EchelonWebSocketClient implements WebSocketContainer {
+@ClientEndpoint
+public class EchelonWebSocketClient extends Endpoint {
 
 
-
+    Session session;
     static EchelonWebSocketClient client;
     public EchelonWebSocketClient(String domain)
     {
-        super(URI.create("wss://" + getDomain() + "/"));
         client = this;
         this.domain = domain;
-
-
-
-
     }
 
 
-
     @Override
-    public void onOpen(ServerHandshake handshakedata) {
-
-    }
-
-    @Override
-    public void onMessage(String message) {
-        JsonElement jsonElement = JsonParser.parseString(message);
-        Echelon.logger.info("Server Message " + jsonElement);
-        JsonObject jsonMessage = jsonElement.getAsJsonObject();
-        String type = jsonMessage.get("type").getAsString();
-
-        switch (type) {
-            case "ping":
-                HashMap<String, Object> pong = new HashMap<>();
-                pong.put("type", "core");
-                pong.put("method", "pong");
-                pong.put("apiVersion", 1.9);
-                String gsonData = Utils.getJsonString(pong);
-                EchelonWebSocketClient.sendMessage(gsonData);
-                break;
-            case "ready":
-                break;
-            case "twitchAuthCompleted":
-                JsonObject userData = jsonMessage.getAsJsonObject("userData");
-                TwitchResponses.ClientToken token = new TwitchResponses.ClientToken();
-                token.success = true;
-                token.apiVersion = userData.get("apiVersion").getAsFloat();
-                token.id = userData.get("id").toString();
-                token.uid = userData.get("uid").getAsString();
-                token.name = userData.get("name").toString();
-                token.tokenVersion = userData.get("tokenVersion").getAsFloat();
-                EchelonTwitchController.setClientTokenData(token,false);
-                break;
+    public void onClose(Session session, CloseReason closeReason) {
+        INSTANCE.logger.error("Socket Connection Closes");
+        INSTANCE.logger.error("Close Reason " + closeReason.toString());
+        connected = false;
+        if (healthCheck())
+        {
+            init(()-> INSTANCE.logger.info("Reconnected"));
         }
+        super.onClose(session, closeReason);
     }
 
+
     @Override
-    public void onClose(int code, String reason, boolean remote) {
-        System.err.println("Socket Connection Closes");
-        logger.warn("Close Reason " + reason);
+    public void onError(Session session, Throwable thr) {
+        INSTANCE.logger.warn("Error Occurred");
+        INSTANCE.logger.warn(thr.toString());
+        thr.printStackTrace();
+
+        super.onError(session, thr);
     }
 
-    @Override
-    public void onError(Exception ex) {
-        logger.warn("Error Occurred");
-        logger.warn(ex.toString());
-        ex.printStackTrace();
 
+    @Override
+    public void onOpen(Session session, EndpointConfig config) {
+            System.out.println("Connection Opened");
     }
 
     @FunctionalInterface
@@ -112,21 +81,24 @@ public class EchelonWebSocketClient implements WebSocketContainer {
     {
         if (connecting || connected)
         {
-            logger.warn("Socket is already connecting or reconnecting, Ignoring Init call...");
+            INSTANCE.logger.warn("Socket is already connecting or reconnecting, Ignoring Init call...");
             return;
         }
         connecting = true;
+        URI uri = URI.create("wss://" + getDomain() + "/");
+        INSTANCE.logger.info("Creating WebSocket Container");
 
-        logger.info("Creating WebSocket Container");
-        logger.info("Created WebSocket Container Successfully");
-
-        logger.info("Connecting to server");
+        WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+        INSTANCE.logger.info("Created WebSocket Container Successfully");
+        INSTANCE.logger.info("Connecting to server");
         try {
-            this.connectBlocking();
-        } catch (InterruptedException e) {
+            session = container.connectToServer(this,ClientEndpointConfig.Builder.create().build(),uri );
+        } catch (DeploymentException | IOException e) {
             throw new RuntimeException(e);
         }
-        logger.info("Connected to server, sending init message");
+
+        INSTANCE.logger.info("Connected to server, sending init message");
+        client.session.addMessageHandler(new Echelon.MessageHandler());
         sendSocketInitMessage();
         onConnectSocket.run();
         connecting = false;
@@ -151,11 +123,11 @@ public class EchelonWebSocketClient implements WebSocketContainer {
             String data = Utils.getJsonString(init);
 
             sendMessage(data);
-            Echelon.logger.info("Sent Init Message");
+            INSTANCE.logger.info("Sent Init Message");
         }
     }
 
-    public static void sendOverridingInitMessage(String newID)
+    public  void sendOverridingInitMessage(String newID)
     {
         HashMap<String,Object> override = new HashMap<>();
         override.put("type", "core");
@@ -167,15 +139,15 @@ public class EchelonWebSocketClient implements WebSocketContainer {
         sendMessage(data);
     }
 
-    public static void sendMessage(String message)
+    public void sendMessage(String message)
     {
-        if (!client.isClosed()) {
-            client.send(message);
-
-        }else
+        session.getAsyncRemote().sendText(message, handle ->
         {
-            logger.warn("Client is not connected");
-        }
+            if (handle.isOK())
+            {
+                INSTANCE.logger.info("Sent Message Successfully");
+            }
+        });
     }
 
     public boolean healthCheck() {
@@ -195,7 +167,7 @@ public class EchelonWebSocketClient implements WebSocketContainer {
             HttpGet request = new HttpGet(uri);
 
             HttpResponse response =  client.execute(request);
-            Echelon.logger.warn(response.getEntity().getContent().toString());
+            INSTANCE.logger.warn(response.getEntity().getContent().toString());
 
             StringBuilder builder = new StringBuilder();
             InputStream stream = response.getEntity().getContent();

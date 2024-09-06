@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static com.EchelonSDK.Echelon.INSTANCE;
+
 
 public class Utils {
 
@@ -62,7 +64,7 @@ public class Utils {
     {
 
         return CompletableFuture.supplyAsync(() ->{
-            Echelon.logger.info(Thread.currentThread().getContextClassLoader().toString());
+            INSTANCE.logger.info(Thread.currentThread().getContextClassLoader().toString());
             T response;
             if (apiVersion != 0f)
             {
@@ -99,7 +101,7 @@ public class Utils {
         } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        });
+        },Echelon.threadPool);
     }
 
     public static <T extends  APIResponse> CompletableFuture<T> apiRequest(String apiUrl, HashMap<String,Object> formData, Type typeToken)

@@ -1,10 +1,15 @@
 package com.EchelonSDK;
 
+import com.EchelonSDK.Responses.APIResponse;
 import com.EchelonSDK.Responses.TwitchResponses;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
+
+import static com.EchelonSDK.Echelon.*;
 
 public class EchelonTwitchController {
     public static class LoginAuthData
@@ -31,6 +36,12 @@ public class EchelonTwitchController {
 
         void run(TwitchResponses.ClientToken tokenData, boolean fromStoredCredentials);
     };
+    @FunctionalInterface
+    public interface onPassThroughComplete<T>
+    {
+
+        void run(T response);
+    }
 
 
     public static ArrayList<onAuthComplete> onTwitchAuthCompleted = new ArrayList<>();
@@ -46,7 +57,7 @@ public class EchelonTwitchController {
         formData.put("requestorId",Echelon.deviceID);
 
         CompletableFuture<TwitchResponses.AuthCode> red = Utils.apiRequest(Echelon.getUrl(),formData, TwitchResponses.AuthCode.class);
-        red.thenAccept(code::run).join();
+        red.thenAccept(code::run);
 
     }
 
@@ -57,11 +68,11 @@ public class EchelonTwitchController {
 
         if(!code.success)
         {
-         Echelon.logger.info("Error generating AuthCode");
+         INSTANCE.logger.info("Error generating AuthCode");
          required.run(new LoginAuthData());
         }
 
-        Echelon.logger.info("Got AuthCode: " + code.code);
+        INSTANCE.logger.info("Got AuthCode: " + code.code);
         LoginAuthData authData = new LoginAuthData();
         authData.success = true;
         authData.authCode = code.code;
@@ -102,7 +113,7 @@ public class EchelonTwitchController {
             complete.run(tokenData,fromStoredCredentials);
         }
         //also override our socket connection device id in server for our twitch id
-        EchelonWebSocketClient.sendOverridingInitMessage(tokenData.uid);
+        Echelon.getClient().sendOverridingInitMessage(tokenData.uid);
     }
 
     public static void setClientTokenData(TwitchResponses.ClientToken token,boolean fromStoredCredentials)
@@ -122,7 +133,7 @@ public class EchelonTwitchController {
         if(!Echelon.initialised)return false;
 
         clientToken = null;
-        EchelonWebSocketClient.sendOverridingInitMessage("");
+        Echelon.getClient().sendOverridingInitMessage("");
         //TODO on Credentials Cleared;
         return true;
     }
@@ -130,5 +141,40 @@ public class EchelonTwitchController {
     public static TwitchResponses.ClientToken getClientTokenData()
     {
         return clientToken;
+    }
+
+
+    public enum APIEndPoint
+    {
+        USERS("Users"),
+        VALIDATETOKEN("valideteToken"),
+        REFRESHTOKEN("refreshToken"),
+        STREAMS("streams"),
+        CHATTERS("chatters"),
+        FOLLOWS("follows");
+
+        public final String string;
+        APIEndPoint(String string)
+        {
+            this.string = string;
+        }
+
+    }
+
+    public static <T extends APIResponse> CompletableFuture<T> PassThrough(APIEndPoint endpoint, HashMap<String,Object> formdata, onPassThroughComplete<T> onComplete, Type token)
+    {
+
+
+
+        if(!initialised) return null;
+
+
+        String endpointString = endpoint.string;
+        endpointString = endpointString.toLowerCase();
+        formdata.put("type","twitch-passthrough");
+        formdata.put("method",endpointString);
+        CompletableFuture<T> response = Utils.apiRequest(getUrl(),formdata, token);
+        response.thenAccept(onComplete::run);
+        return response;
     }
 }

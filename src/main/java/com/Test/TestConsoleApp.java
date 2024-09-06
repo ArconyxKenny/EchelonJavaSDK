@@ -5,6 +5,7 @@ import com.EchelonSDK.EchelonTwitchController;
 import com.EchelonSDK.Responses.Responses;
 import com.EchelonSDK.Responses.TwitchResponses.ClientToken;
 import com.google.gson.Gson;
+import org.slf4j.event.Level;
 
 
 import java.io.IOException;
@@ -12,7 +13,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.logging.Level;
+
+import static com.EchelonSDK.Echelon.INSTANCE;
 
 public class TestConsoleApp {
 
@@ -25,8 +27,8 @@ public class TestConsoleApp {
     }
     TestConsoleApp()
     {
+        initialiseEchelon();
         startInput();
-        Echelon.logger.isEnabledForLevel(org.slf4j.event.Level.DEBUG);
 
     }
 
@@ -37,7 +39,7 @@ public class TestConsoleApp {
         String input;
         do
         {
-            Echelon.logger.info("NEED INPUT");
+            INSTANCE.logger.info("NEED INPUT");
             input = scanner.nextLine();
             if (!input.isEmpty()){
             String mode = input.split(" ")[0];
@@ -46,39 +48,34 @@ public class TestConsoleApp {
                 option = input.split(" ")[1];
             }
             switch (mode) {
-                case "1":
-                    Echelon.logger.info("Creating Echelon System");
-                    initialiseEchelon();
-                    initialiseEventHooks();
-                    break;
 
-                case "2":
-                    Echelon.logger.info("Logging in");
+                case "1":
+                    INSTANCE.logger.info("Logging in");
                     echelonLogin();
                     break;
-                case "3" :
-                    Echelon.logger.info("Logging out");
+                case "2" :
+                    INSTANCE.logger.info("Logging out");
                     echelonLogout();
                     break;
-                case "4" :
-                    Echelon.logger.info("Getting Top 10 Players");
+                case "3" :
+                    INSTANCE.logger.info("Getting Top 10 Players");
                     getTop10LeaderBoard();
                     break;
-                case "5" :
-                    Echelon.logger.info("Opening Dashboard");
+                case "4" :
+                    INSTANCE.logger.info("Opening Dashboard");
                     openDashboard();
                     break;
-                case "6":
-                    Echelon.logger.info("Adding Points");
+                case "5":
+                    INSTANCE.logger.info("Adding Points");
                     addPoints(option);
                     break;
 
-                case "7":
-                    Echelon.logger.info("Getting Player Stat");
+                case "6":
+                    INSTANCE.logger.info("Getting Player Stat");
                     getPlayerStat();
                     break;
-                case "8":
-                    Echelon.logger.info("Getting nearby leader board players");
+                case "7":
+                    INSTANCE.logger.info("Getting nearby leader board players");
                     getNearByPlayerStats();
                     break;
             }
@@ -93,10 +90,10 @@ public class TestConsoleApp {
                     if (!success)
                     {
 
-                        Echelon.logger.info("ERROR" + error);
+                        INSTANCE.logger.info("ERROR" + error);
                     }  else
                     {
-                        Echelon.logger.info("Success");
+                        INSTANCE.logger.info("Success");
 
                     }
                 });
@@ -114,7 +111,7 @@ public class TestConsoleApp {
     {
         EchelonTwitchController.AuthWithTwitch(required->{
             try {
-                Echelon.logger.info(required.webUrl);
+                INSTANCE.logger.info(required.webUrl);
                 java.awt.Desktop.getDesktop().browse(new URI(required.webUrl));
             } catch (IOException | URISyntaxException e) {
                 throw new RuntimeException(e);
@@ -129,7 +126,7 @@ public class TestConsoleApp {
     private void getTop10LeaderBoard()
     {
         echelon.getStatLeaderboard("points",10,response ->{
-            Echelon.logger.info("Leader board player count " + response.players.length);
+            INSTANCE.logger.info("Leader board player count " + response.players.length);
             for (Responses.StatLeaderboardPlayer player: response.players)
             {
                 System.out.println(player.value);
@@ -158,12 +155,12 @@ public class TestConsoleApp {
         testPlayers.add(playerData.uid);
 
         boolean success = echelon.startPlayerRewardsListener(testPlayers);
-        Echelon.logger.info("Checking for unlocked rewards (" + success + ")");
+        INSTANCE.logger.info("Checking for unlocked rewards (" + success + ")");
     }
 
     public void onAuthCompleted(ClientToken tokenData, boolean fromStoredCredentials)
     {
-        Echelon.logger.info("Twitch user Authorized: " + tokenData.name + " id " + tokenData.id + " data " + new Gson().toJson(tokenData));
+        INSTANCE.logger.info("Twitch user Authorized: " + tokenData.name + " id " + tokenData.id + " data " + new Gson().toJson(tokenData));
         playerData =tokenData;
 
         startRewardsListener();
@@ -184,7 +181,7 @@ public class TestConsoleApp {
     }
     private void onPlayerRewardClaimed(String playerUID, String rewardId,String value, String rewardToken)
     {
-        Echelon.logger.info("Player "+playerUID+" claimed reward "+rewardId+" with data "+value);
+        INSTANCE.logger.info("Player "+playerUID+" claimed reward "+rewardId+" with data "+value);
     }
 
 
@@ -192,15 +189,15 @@ public class TestConsoleApp {
     private void addPoints(String points)
     {
         float value = Float.parseFloat(points);
-        echelon.addPlayerStat(playerData.uid,"points",value,(add)->{
+        echelon.addPlayerStats(playerData.uid,"points",value,(add)->{
 
             if (add.success){
-                Echelon.logger.info("Added Points to local player " + value);
+                INSTANCE.logger.info("Added Points to local player " + value);
             }else
             {
-                Echelon.logger.info("Not sure what happened but it didn't work");
+                INSTANCE.logger.info("Not sure what happened but it didn't work");
             }
-        }).join();
+        });
     }
 
     private void getPlayerStat()
